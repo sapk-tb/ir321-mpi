@@ -4,6 +4,16 @@
 #include "mpi.h"
 #include <dirent.h>
 
+/*
+void send(int rank, int tag, char *cmd){
+	printf("I've sent  %s to  slave number %d w/ length %d \n", cmd, rank, strlen(cmd));
+	printf("Process sending %s to %d\n", cmd, rank);
+	MPI_Send(cmd, strlen(cmd)+1, MPI_CHAR, rank, tag, MPI_COMM_WORLD); 
+}
+*/
+void nextCMD(struct dirent* d){
+	
+}
 
 int main(int argc, char *argv[])
 {
@@ -14,8 +24,8 @@ int main(int argc, char *argv[])
   int notover;
   int  receivedsize;
 
-  int partialsize, totalsize;
-  char instr [100], base[256], cmd[256], buf[256];
+  int partialsize, totalsize, sender;
+  char instr [100], base[256], cmd[256], buf[256], f[256][256];
   struct dirent *direntp;
 
   /* Start up MPI */
@@ -49,44 +59,46 @@ int main(int argc, char *argv[])
       exit(1);
     }
     sprintf(base, "du -s %s/", argv[1]);
-    while (notover) {
-      wait_for_nb_slaves=0;
 
-      for( i=1 ; i < nbslaves+1 ; i++ ) {
-
-	if ( (direntp = readdir( dirp )) != NULL ) {
-	  if(!strcmp(direntp->d_name, "."))
+    //Generate list folder
+//*
+    i=0;
+    while ( (direntp = readdir( dirp )) != NULL ) {
+        i++;
+	if(!strcmp(direntp->d_name, "."))
 	    { i= i-1; continue;}
-	  if(!strcmp(direntp->d_name, ".."))
-	    {i = i -1; continue;}
-	  strcpy(cmd, base);
-	  strcat(cmd, direntp->d_name);
-	  wait_for_nb_slaves++;
-	}
-	else {
-	  notover = 0;
-	}
-
-	if (notover) {
-	  printf("I've sent  %s to  slave number %d w/ length \n",
-		 cmd, i, strlen(cmd));
-	  printf("Process sending %s to %d\n", cmd, i);
-	  MPI_Send(cmd, strlen(cmd)+1, MPI_CHAR, i, tag, MPI_COMM_WORLD); 
-	}
-      }
-
-      /* Wait for results from slaves */
-      for( i=1 ; i<wait_for_nb_slaves+1 ; i++ ){
-	printf("attente  maitre %d\n", i);
-	MPI_Recv(&partialsize, 1, MPI_INT, i, tag+1, MPI_COMM_WORLD, &status);
-	printf("fin attente  maitre %d\n", i);
-	totalsize = totalsize + partialsize;
-	printf("I got %d from node %d \n",partialsize, i);
-	printf("Total %d  \n",totalsize);
-      }
-	  
+	if(!strcmp(direntp->d_name, ".."))
+	    {i = i-1; continue;}
+	strcpy(cmd, base);
+	strcat(cmd, direntp->d_name);
+	strcpy(f[i-1],cmd);
     }
-  
+//*/
+//*
+    //init worker
+    for(int a=1 ; a < nbslaves+1 ; a++ ) {
+	printf("I've sent  %s to  slave number %d w/ length %d \n", f[i-a], a, strlen(f[i-a]));
+	printf("Process sending %s to %d\n", f[i-a], a);
+	MPI_Send(f[i-a], strlen(f[i-a])+1, MPI_CHAR, a, tag, MPI_COMM_WORLD); 
+    }
+//*/
+//*
+    while (i>0) {
+	printf("Attente  maitre (%d) ...\n",i);
+	MPI_Recv(&sender, 1, MPI_INT, MPI_ANY_SOURCE, tag+2, MPI_COMM_WORLD, &status);//ID Sender
+	MPI_Recv(&partialsize, 1, MPI_INT, sender, tag+1, MPI_COMM_WORLD, &status); //Value
+	totalsize = totalsize + partialsize;
+	printf("I got %d from node %d \n",partialsize, sender);
+	printf("Total %d  \n",totalsize);
+
+        i--;
+	if(i>nbslaves-1){
+		printf("I've sent  %s to  slave number %d w/ length %d \n", f[i], sender, strlen(f[i]));
+		printf("Process sending %s to %d\n", f[i], sender);
+		MPI_Send(f[i], strlen(f[i])+1, MPI_CHAR, sender, tag, MPI_COMM_WORLD); 
+	}
+    }
+ //*/ 
     printf("calcul termine pour le maitre\n");
     (void)closedir( dirp );
     printf("close dir  pour le maitre\n");
@@ -97,6 +109,7 @@ int main(int argc, char *argv[])
   } else {
 
     /* slaves */
+
     while (notover) {
 
       size = 0;
@@ -118,6 +131,7 @@ int main(int argc, char *argv[])
 	fclose(fp);
 	printf("slave %i: executed %s returning: %i\n", rank, instr, size);
 	/* Send result to master */
+	MPI_Send(&rank, 1, MPI_INT, 0, tag+2, MPI_COMM_WORLD);
 	MPI_Send(&size, 1, MPI_INT, 0, tag+1, MPI_COMM_WORLD); 
       }
     }
