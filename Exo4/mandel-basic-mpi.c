@@ -18,7 +18,8 @@
 #define NX (2 * MAXX + 1)
 #define NY (2 * MAXY + 1)
 
-#define NBITER 550
+#define NBITER 50
+//550
 #define DATATAG 150
 
 static int mandel(double, double);

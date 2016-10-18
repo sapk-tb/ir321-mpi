@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
 	printf("Total %d  \n",totalsize);
         i--;
 
-	if( (direntp = readdir( dirp )) != NULL ) { //We have folde
+	if( (direntp = readdir( dirp )) != NULL ) { //We have folder
 		if(!strcmp(direntp->d_name, "."))
 		    { i= i-1; continue;}
 		if(!strcmp(direntp->d_name, ".."))
