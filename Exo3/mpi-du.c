@@ -11,10 +11,11 @@ void send(int rank, int tag, char *cmd){
 	MPI_Send(cmd, strlen(cmd)+1, MPI_CHAR, rank, tag, MPI_COMM_WORLD); 
 }
 */
+/*
 void nextCMD(struct dirent* d){
 	
 }
-
+*/
 int main(int argc, char *argv[])
 {
   MPI_Status status;
@@ -61,7 +62,7 @@ int main(int argc, char *argv[])
     sprintf(base, "du -s %s/", argv[1]);
 
     //Generate list folder
-//*
+/*
     i=0;
     while ( (direntp = readdir( dirp )) != NULL ) {
         i++;
@@ -75,11 +76,21 @@ int main(int argc, char *argv[])
     }
 //*/
 //*
-    //init worker
-    for(int a=1 ; a < nbslaves+1 ; a++ ) {
-	printf("I've sent  %s to  slave number %d w/ length %d \n", f[i-a], a, strlen(f[i-a]));
-	printf("Process sending %s to %d\n", f[i-a], a);
-	MPI_Send(f[i-a], strlen(f[i-a])+1, MPI_CHAR, a, tag, MPI_COMM_WORLD); 
+    //Init worker
+    i=0;//i correspond to working slave
+    for(int a=0 ; a < nbslaves ; a++ ) {
+	if( (direntp = readdir( dirp )) != NULL ) {
+		if(!strcmp(direntp->d_name, "."))
+		    { a= a-1; continue;}
+		if(!strcmp(direntp->d_name, ".."))
+		    { a= a-1; continue;}
+		strcpy(cmd, base);
+		strcat(cmd, direntp->d_name);
+		i++;
+		printf("I've sent  %s to  slave number %d w/ length %d \n", cmd, i, strlen(cmd));
+		printf("Process sending %s to %d\n", cmd, i);
+		MPI_Send(cmd, strlen(cmd)+1, MPI_CHAR, i, tag, MPI_COMM_WORLD); 
+	}
     }
 //*/
 //*
@@ -90,13 +101,26 @@ int main(int argc, char *argv[])
 	totalsize = totalsize + partialsize;
 	printf("I got %d from node %d \n",partialsize, sender);
 	printf("Total %d  \n",totalsize);
-
         i--;
-	if(i>nbslaves-1){
+
+	if( (direntp = readdir( dirp )) != NULL ) { //We have folde
+		if(!strcmp(direntp->d_name, "."))
+		    { i= i-1; continue;}
+		if(!strcmp(direntp->d_name, ".."))
+		    {i = i-1; continue;}
+		strcpy(cmd, base);
+		strcat(cmd, direntp->d_name);
+		printf("I've sent  %s to  slave number %d w/ length %d \n", cmd, sender, strlen(cmd));
+		printf("Process sending %s to %d\n", cmd, sender);
+		MPI_Send(cmd, strlen(cmd)+1, MPI_CHAR, sender, tag, MPI_COMM_WORLD); 
+		i++;
+	}
+/*
 		printf("I've sent  %s to  slave number %d w/ length %d \n", f[i], sender, strlen(f[i]));
 		printf("Process sending %s to %d\n", f[i], sender);
 		MPI_Send(f[i], strlen(f[i])+1, MPI_CHAR, sender, tag, MPI_COMM_WORLD); 
 	}
+*/
     }
  //*/ 
     printf("calcul termine pour le maitre\n");
