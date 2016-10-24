@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
                 int res;
 
                 /* Begin User Program  - the master */
-                //*
+                /*
                 for(i = -MAXX; i <= MAXX; i++) {
                         for(j = -MAXY; j <= MAXY; j++) {
                                 //MPI_Recv(&res, 1, MPI_INT, 1, DATATAG, MPI_COMM_WORLD, &status);
@@ -60,13 +60,22 @@ int main(int argc, char *argv[])
                         }
                 }
                 //*/
-                /*
+                //*
                 int nb_pixel = MAXX*2+1 + MAXY*2+1;
-                int prog_slave[nbslaves] = { 0 };
+                int prog_slave[nbslaves];
+                for (int i = 0; i < nbslaves; i++) {
+                  /* init à 0 */
+                  prog_slave[i] = 0;
+                }
                 for(i = 0; i < nb_pixel; i++) {
                   MPI_Recv(&res, 1, MPI_INT, MPI_ANY_SOURCE, DATATAG, MPI_COMM_WORLD, &status);
                   printf("Slave id %d has send : %d \n", status.MPI_SOURCE, res);
-                  cases[nbslaves*((prog_slave[status.MPI_SOURCE-1]/(MAXY*2+1))+1)][prog_slave[status.MPI_SOURCE-1]%(MAXY*2+1)] = res;
+
+                  //printf("%d\n", prog_slave[status.MPI_SOURCE-1]);
+                  printf("%d(%d) [%d,%d] \n", status.MPI_SOURCE, prog_slave[status.MPI_SOURCE-1], nbslaves*(prog_slave[status.MPI_SOURCE-1]/(MAXY*2+1)), prog_slave[status.MPI_SOURCE-1]%(MAXX*2+1));
+                  //printf(" [%d,%d] \n", status.MPI_SOURCE, nbslaves*((prog_slave[status.MPI_SOURCE-1]/(MAXY*2+1))+1), prog_slave[status.MPI_SOURCE-1]%(MAXY*2+1));
+
+                  cases[nbslaves*( prog_slave[status.MPI_SOURCE-1]/(MAXY*2+1) )][prog_slave[status.MPI_SOURCE-1]%(MAXX*2+1)] = res;
                   prog_slave[status.MPI_SOURCE-1]++;
                 }
                 //*/
