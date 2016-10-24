@@ -19,7 +19,7 @@
 #define NX (2 * MAXX + 1)
 #define NY (2 * MAXY + 1)
 
-#define NBITER 100 /* Récursivité */
+#define NBITER 550 /* Récursivité */
 //#define NBITER 550
 #define DATATAG 150
 
@@ -49,34 +49,13 @@ int main(int argc, char *argv[])
                 int res;
 
                 /* Begin User Program  - the master */
-                /*
-                for(i = -MAXX; i <= MAXX; i++) {
-                        for(j = -MAXY; j <= MAXY; j++) {
-                                //MPI_Recv(&res, 1, MPI_INT, 1, DATATAG, MPI_COMM_WORLD, &status);
-                                //MPI_Recv(&res, 1, MPI_INT, MPI_ANY_SOURCE, DATATAG, MPI_COMM_WORLD, &status);
-                                MPI_Recv(&res, 1, MPI_INT, ((MAXX+i)%nbslaves)+1, DATATAG, MPI_COMM_WORLD, &status);
-                                printf("Slave id %d has send : %d \n", status.MPI_SOURCE, res);
-                                cases[i + MAXX][j + MAXY] = res;
-                        }
-                }
-                //*/
                 //*
-                int nb_pixel = MAXX*2+1 + MAXY*2+1;
-                int prog_slave[nbslaves];
-                for (int i = 0; i < nbslaves; i++) {
-                  /* init à 0 */
-                  prog_slave[i] = 0;
-                }
+                int data[3], nb_pixel = (MAXX*2+1) * (MAXY*2+1);
                 for(i = 0; i < nb_pixel; i++) {
-                  MPI_Recv(&res, 1, MPI_INT, MPI_ANY_SOURCE, DATATAG, MPI_COMM_WORLD, &status);
-                  printf("Slave id %d has send : %d \n", status.MPI_SOURCE, res);
-
-                  //printf("%d\n", prog_slave[status.MPI_SOURCE-1]);
-                  printf("%d(%d) [%d,%d] \n", status.MPI_SOURCE, prog_slave[status.MPI_SOURCE-1], nbslaves*(prog_slave[status.MPI_SOURCE-1]/(MAXY*2+1)), prog_slave[status.MPI_SOURCE-1]%(MAXX*2+1));
-                  //printf(" [%d,%d] \n", status.MPI_SOURCE, nbslaves*((prog_slave[status.MPI_SOURCE-1]/(MAXY*2+1))+1), prog_slave[status.MPI_SOURCE-1]%(MAXY*2+1));
-
-                  cases[nbslaves*( prog_slave[status.MPI_SOURCE-1]/(MAXY*2+1) )][prog_slave[status.MPI_SOURCE-1]%(MAXX*2+1)] = res;
-                  prog_slave[status.MPI_SOURCE-1]++;
+                  MPI_Recv(&data, 3, MPI_INT, MPI_ANY_SOURCE, DATATAG, MPI_COMM_WORLD, &status);
+                  printf("Slave id %d has send : %d \n", status.MPI_SOURCE, data[2]);
+                  printf("%d: [%d,%d] -> [%d,%d] = %d\n", status.MPI_SOURCE, data[0], data[1], data[0] + MAXX, data[1] + MAXY, data[2]);
+                  cases[data[0] + MAXX][data[1] + MAXY] = data[2];
                 }
                 //*/
                 dump_ppm("mandel.ppm", cases);
@@ -87,27 +66,21 @@ int main(int argc, char *argv[])
                 printf("Slave id %d on %d nodes starting ...\n", rank, size);
                 /* On est l'un des fils */
                 double x, y;
-                int i, j, res, rc;
+                int i, j, res, rc, data[3];
                 //*
-                for(i = -MAXX; i <= MAXX; i = i + nbslaves) { // Chacun fait une ligne
+                for(i = -MAXX+(rank-1); i <= MAXX; i = i + nbslaves) { // Chacun fait une ligne
+                        printf("Slave id %d has start line : %d \n", rank ,i);
                         for(j = -MAXY; j <= MAXY; j++) {
                                 x = 2 * i / (double)MAXX;
                                 y = 1.5 * j / (double)MAXY;
+
                                 res = mandel(x, y);
-                                MPI_Send(&res, 1, MPI_INT, 0, DATATAG, MPI_COMM_WORLD);
+                                data[0] = i; data[1] = j; data[2] = res;
+//                                printf("[%d,%d] = %d\n", data[0], data[1], data[2]);
+                                MPI_Send(&data, 3, MPI_INT, 0, DATATAG, MPI_COMM_WORLD);
+//                                usleep(10000);
                         }
                 }
-                //*/
-                /*
-                for(i = -MAXX; i <= MAXX; i++) {
-                        for(j = -MAXY; j <= MAXY; j++) {
-                                x = 2 * i / (double)MAXX;
-                                y = 1.5 * j / (double)MAXY;
-                                res = mandel(x, y);
-                                MPI_Send(&res, 1, MPI_INT, 0, DATATAG, MPI_COMM_WORLD);
-                        }
-                }
-                //*/
         }
 
         MPI_Finalize();
