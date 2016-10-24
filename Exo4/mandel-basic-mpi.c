@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
         nbslaves = size -1;
 
         if (rank == 0) {
-                printf("Master id %d on %d nodes starting ...\n", rank, size);
+                //printf("Master id %d on %d nodes starting ...\n", rank, size);
 
                 int res;
 
@@ -52,10 +52,10 @@ int main(int argc, char *argv[])
                 //*
                 int data[3], nb_pixel = (MAXX*2+1) * (MAXY*2+1);
                 for(i = 0; i < nb_pixel; i++) {
-                  MPI_Recv(&data, 3, MPI_INT, MPI_ANY_SOURCE, DATATAG, MPI_COMM_WORLD, &status);
-                  printf("Slave id %d has send : %d \n", status.MPI_SOURCE, data[2]);
-                  printf("%d: [%d,%d] -> [%d,%d] = %d\n", status.MPI_SOURCE, data[0], data[1], data[0] + MAXX, data[1] + MAXY, data[2]);
-                  cases[data[0] + MAXX][data[1] + MAXY] = data[2];
+                        MPI_Recv(&data, 3, MPI_INT, MPI_ANY_SOURCE, DATATAG, MPI_COMM_WORLD, &status);
+                        //printf("Slave id %d has send : %d \n", status.MPI_SOURCE, data[2]);
+                        //printf("%d: [%d,%d] -> [%d,%d] = %d\n", status.MPI_SOURCE, data[0], data[1], data[0] + MAXX, data[1] + MAXY, data[2]);
+                        cases[data[0] + MAXX][data[1] + MAXY] = data[2];
                 }
                 //*/
                 dump_ppm("mandel.ppm", cases);
@@ -63,13 +63,13 @@ int main(int argc, char *argv[])
         }
 
         else {
-                printf("Slave id %d on %d nodes starting ...\n", rank, size);
+                //printf("Slave id %d on %d nodes starting ...\n", rank, size);
                 /* On est l'un des fils */
                 double x, y;
                 int i, j, res, rc, data[3];
                 //*
                 for(i = -MAXX+(rank-1); i <= MAXX; i = i + nbslaves) { // Chacun fait une ligne
-                        printf("Slave id %d has start line : %d \n", rank ,i);
+                        //printf("Slave id %d has start line : %d \n", rank,i);
                         for(j = -MAXY; j <= MAXY; j++) {
                                 x = 2 * i / (double)MAXX;
                                 y = 1.5 * j / (double)MAXY;

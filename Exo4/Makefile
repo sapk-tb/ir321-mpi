@@ -22,12 +22,17 @@ VPATH=.:$(srcdir)
 #.PHONY clean
 
 default: all
-all: mandel-basic-mpi
+all: mandel-basic-mpi mandel-orig-mpi
 
 mandel-basic-mpi: mandel-basic-mpi.o
 #	$(MPE_CC) -mpilog -o $@ $? $(LD_FLAGS) $(MPI_LDFLAGS)
 #	$(MPE_CC) -mpitrace -o $@ $? $(LD_FLAGS) $(MPI_LDFLAGS)
-	$(CC) -o $@ $? $(LD_FLAGS) $(MPI_LDFLAGS) 
+	$(CC) -o $@ $? $(LD_FLAGS) $(MPI_LDFLAGS)
 
+mandel-orig-mpi: mandel-orig-mpi.o
+	#	$(MPE_CC) -mpilog -o $@ $? $(LD_FLAGS) $(MPI_LDFLAGS)
+	#	$(MPE_CC) -mpitrace -o $@ $? $(LD_FLAGS) $(MPI_LDFLAGS)
+		$(CC) -o $@ $? $(LD_FLAGS) $(MPI_LDFLAGS)
+		
 clean:
 	$(RM) -f *.o mandel-basic-mpi
