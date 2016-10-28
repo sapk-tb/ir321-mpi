@@ -12,7 +12,7 @@
 
 
 /* N'hesitez pas a changer MAXX .*/
-#define MAXX  25
+#define MAXX  150
 //#define MAXX  500
 #define MAXY (MAXX * 3 / 4)
 
